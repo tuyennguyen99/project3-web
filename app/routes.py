@@ -1,11 +1,13 @@
-from app import app, db, queue_client
+from app import app, db
 from datetime import datetime
 from app.models import Attendee, Conference, Notification
 from flask import render_template, session, request, redirect, url_for, flash, make_response, session
-from azure.servicebus import Message
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import logging
+SERVICE_BUS_CONNECTION_STRING = app.config.get('SERVICE_BUS_CONNECTION_STRING')
+SERVICE_BUS_QUEUE = app.config.get('SERVICE_BUS_QUEUE_NAME')
 
 @app.route('/')
 def index():
@@ -81,12 +83,14 @@ def notification():
             # notification.status = 'Notified {} attendees'.format(len(attendees))
             # db.session.commit()
             # TODO Call servicebus queue_client to enqueue notification ID
-            sender = queue_client.get_sender()
-            sessions = queue_client.list_sessions()
+            with ServiceBusClient.from_connection_string(SERVICE_BUS_CONNECTION_STRING) as client:
+                with client.get_queue_sender(SERVICE_BUS_QUEUE) as sender:
+                    # Sending a single message
+                    single_message = ServiceBusMessage(str(notification.id))
+                    sender.send_messages(single_message)
             #################################################
             ## END of TODO
             #################################################
-
             return redirect('/Notifications')
         except :
             logging.error('log unable to save notification')
