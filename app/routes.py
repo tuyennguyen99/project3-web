@@ -82,7 +82,9 @@ def notification():
             # db.session.commit()
             # TODO Call servicebus queue_client to enqueue notification ID
             sender = queue_client.get_sender()
+            sender.send(Message(str(notification.id)))
             sender.queue_message(Message(str(notification.id)))
+
             #################################################
             ## END of TODO
             #################################################
