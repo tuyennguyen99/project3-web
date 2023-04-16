@@ -92,8 +92,10 @@ def notification():
             ## END of TODO
             #################################################
             return redirect('/Notifications')
-        except :
+        except Exception as ex:
             logging.error('log unable to save notification')
+            logging.error(ex)
+
 
     else:
         return render_template('notification.html')
